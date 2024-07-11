@@ -1,0 +1,5 @@
+{
+    "terminal.integrated.useWslProfiles": false,
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.typeCheckingMode": "basic"
+}
