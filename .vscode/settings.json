@@ -1,5 +1,11 @@
 {
     "terminal.integrated.useWslProfiles": false,
     "python.analysis.autoImportCompletions": true,
-    "python.analysis.typeCheckingMode": "basic"
+    "python.analysis.typeCheckingMode": "basic",
+    "cSpell.words": [
+        "levelname",
+        "myhost",
+        "myimg",
+        "psycopg"
+    ]
 }

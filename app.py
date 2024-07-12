@@ -1,9 +1,13 @@
 import asyncio
 import requests
 from bs4 import BeautifulSoup
+import img_db
 from img_processing import process_images
 import os
 import psycopg2
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
 
 async def fetch_image_from_url(url):
     response = requests.get(url)
@@ -19,28 +23,25 @@ async def fetch_google_image_urls(query):
 async def download_images(image_urls):
     downloaded_images = []
     for url in image_urls:
-        image_data = await fetch_image_from_url(url)
-        downloaded_images.append(image_data)
+        try:
+            image_data = await fetch_image_from_url(url)
+            downloaded_images.append(image_data)
+        except Exception as e:
+            logging.error(f"Error downloading image from URL: {url}, Error: {e}")
     return downloaded_images
 
 if __name__ == "__main__":
     query = "cute kittens"  # Example search query
-    google_image_urls = asyncio.run(fetch_google_image_urls(query))
-    downloaded_images = asyncio.run(download_images(google_image_urls))
-    asyncio.run(process_images(downloaded_images))
-
-
-
-DB_HOST = os.getenv('DB_HOST', 'myhost')
-DB_PORT = os.getenv('DB_PORT', '5432')
-DB_USER = os.getenv('DB_USER', 'postgres')
-DB_PASS = os.getenv('DB_PASS', '13840131')
-DB_NAME = os.getenv('DB_NAME', 'myimg.db')
-
-conn = psycopg2.connect(
-    host=DB_HOST,
-    port=DB_PORT,
-    user=DB_USER,
-    password=DB_PASS,
-    database=DB_NAME
-)
+    try:
+        google_image_urls = asyncio.run(fetch_google_image_urls(query))
+        logging.info(f"Found {len(google_image_urls)} image URLs from Google search")
+        downloaded_images = asyncio.run(download_images(google_image_urls))
+        logging.info(f"Downloaded {len(downloaded_images)} images")
+        db_connection = img_db.connect_to_database()
+        try:
+            asyncio.run(process_images(downloaded_images, google_image_urls, db_connection))
+        finally:
+            db_connection.close()
+            logging.info("Database connection closed")
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
